@@ -77,7 +77,8 @@ def generate_and_submit_wf():
     # set the concurrency limit for the download jobs, and send some extra usage
     # data to the Pegasus developers
     props = Properties()
-    props['condor.universe'] = 'container'
+    props.add_site_profile("condorpool", "condor", "universe", "container");
+
     props['pegasus.data.configuration'] = 'condorio'
     props['dagman.fasterq-dump.maxjobs'] = '20'
     props['pegasus.catalog.workflow.amqp.url'] = 'amqp://friend:donatedata@msgs.pegasus.isi.edu:5672/prod/workflows'
