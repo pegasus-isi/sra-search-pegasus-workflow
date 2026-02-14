@@ -3,12 +3,15 @@
 Pegasus workflow which downloads and aligns SRA data, using SRA Toolkit,
 Samtools and Bowtie2
 
-SRA Tools, samtools and Bowtie2 are all included in a single Docker
-container defined in `Dockerfile` and available in the Docker Hub under
-`pegasus/sra-search`. The workflow is setup up to use that container
-but execute it via Singularity as that maybe a more common container
-runtime on HPC machines. The container runtime used can easily be
-changed in the workflow definition.
+## Container
+
+SRA Tools, samtools and Bowtie2 are all included in a single container
+defined in `container/sra.def`. If the container is not already built
+(no `container/sra.sif` file), build it with:
+
+  cd container && apptainer build sra.sif sra.def
+
+## Workflow
 
 The number of concurrent downloads is limited with a DAGMan
 category profile.
@@ -19,6 +22,10 @@ the final output of the workflow.
 To submit a workflow, run:
 
     ./sra-search.py --sra-id-list tests/10/sra_ids.txt --reference tests/10/crassphage.fna
-    
 
+## Testing
+
+Please test the workflow with the single SRA input:
+
+    ./sra-search.py --sra-id-list tests/1/sra_ids.txt --reference tests/1/crassphage.fna
 

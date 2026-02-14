@@ -15,9 +15,6 @@ from Pegasus.api import *
 logging.basicConfig(level=logging.DEBUG)
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-# need to know where Pegasus is installed for notifications
-PEGASUS_HOME = shutil.which('pegasus-version')
-PEGASUS_HOME = os.path.dirname(os.path.dirname(PEGASUS_HOME))
 
 def add_merge_jobs(wf, parents):
     '''
@@ -26,11 +23,11 @@ def add_merge_jobs(wf, parents):
     parents is a list of jobs, for which all outputs will be
     in the resulting tarball
     '''
-    
+
     max_parents = 25
     final_job = False
     level = 1
-    while len(parents) > 1:
+    while len(parents) >= 1:
         children = []
         if len(parents) <= max_parents:
             final_job = True
@@ -51,13 +48,14 @@ def add_merge_jobs(wf, parents):
                 j.add_inputs(*parent.get_outputs())
                 j.add_args(*parent.get_outputs())
             wf.add_dependency(j, parents=chunk)
-            children.append(j)
+            if not final_job:
+                children.append(j)
         # next round
         level += 1
         parents = children
 
 
-def generate_wf():
+def generate_and_submit_wf():
     '''
     Main function that parses arguments and generates the pegasus
     workflow
@@ -79,21 +77,19 @@ def generate_wf():
     # set the concurrency limit for the download jobs, and send some extra usage
     # data to the Pegasus developers
     props = Properties()
+    props['condor.universe'] = 'container'
+    props['pegasus.data.configuration'] = 'condorio'
     props['dagman.fasterq-dump.maxjobs'] = '20'
     props['pegasus.catalog.workflow.amqp.url'] = 'amqp://friend:donatedata@msgs.pegasus.isi.edu:5672/prod/workflows'
     props.write() 
-    
-    # --- Event Hooks ---------------------------------------------------------
-
-    # get emails on all events at the workflow level
-    wf.add_shell_hook(EventType.ALL, '{}/share/pegasus/notification/email'.format(PEGASUS_HOME))
     
     # --- Transformations -----------------------------------------------------
     
     container = Container(
                    'sra-search',
                    Container.SINGULARITY,
-                   'docker://pegasus/sra-search:latest'
+                   f"file://{BASE_DIR}/container/sra.sif",
+                   image_site="local"
                 )
     tc.add_containers(container)
 
@@ -111,7 +107,7 @@ def generate_wf():
                   'bowtie2',
                   site='local',
                   container=container,
-                  pfn=BASE_DIR + '/tools/bowtie2_wrapper',
+                  pfn=BASE_DIR + '/executables/bowtie2_wrapper',
                   is_stageable=True
               )
     bowtie2.add_profiles(Namespace.CONDOR, key='request_memory', value='2 GB')
@@ -121,7 +117,7 @@ def generate_wf():
                       'fasterq-dump',
                        site='local',
                        container=container,
-                       pfn=BASE_DIR + '/tools/fasterq_dump_wrapper',
+                       pfn=BASE_DIR + '/executables/fasterq_dump_wrapper',
                        is_stageable=True
                      )
     fasterq_dump.add_profiles(Namespace.CONDOR, key='request_memory', value='1 GB')
@@ -133,7 +129,7 @@ def generate_wf():
                 'merge',
                 site='local',
                 container=container,
-                pfn=BASE_DIR + '/tools/merge',
+                pfn=BASE_DIR + '/executables/merge',
                 is_stageable=True
             )
     merge.add_condor_profile(request_memory='1 GB')
@@ -192,14 +188,11 @@ def generate_wf():
     
     add_merge_jobs(wf, to_merge)
 
-    try:
-        wf.add_transformation_catalog(tc)
-        wf.add_replica_catalog(rc)
-        wf.plan(submit=True)
-    except PegasusClientError as e:
-        print(e.output)
+    wf.add_transformation_catalog(tc)
+    wf.add_replica_catalog(rc)
+    wf.plan(submit=True)
 
 
 if __name__ == '__main__':
-    generate_wf()
+    generate_and_submit_wf()
 
