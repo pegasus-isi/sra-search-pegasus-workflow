@@ -2,7 +2,7 @@ BootStrap: docker
 From: debian:13
 
 %environment
-    export PATH="/opt/sratoolkit-2.10.0/bin:/opt/bowtie2-2.2.9:/opt/samtools-1.10/bin:${PATH}"
+    export PATH="/opt/sratoolkit/bin:/opt/bowtie2:/opt/samtools/bin:${PATH}"
 
 %post
 
@@ -21,20 +21,21 @@ From: debian:13
     # sratoolkit
     wget -nv https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/2.10.0/sratoolkit.2.10.0-ubuntu64.tar.gz -O /tmp/sratoolkit.tar.gz
     tar zxvf /tmp/sratoolkit.tar.gz -C /opt/
-    mv /opt/sratoolkit.2.10.0-ubuntu64 /opt/sratoolkit-2.10.0
+    mv /opt/sratoolkit.2.10.0-ubuntu64 /opt/sratoolkit
     rm -f /tmp/sratoolkit.tar.gz
 
     # bowtie2
-    wget -nv https://github.com/BenLangmead/bowtie2/releases/download/v2.2.9/bowtie2-2.2.9-linux-x86_64.zip -O /tmp/bowtie2-2.2.9-linux-x86_64.zip
-    unzip /tmp/bowtie2-2.2.9-linux-x86_64.zip -d /opt/
-    rm -f /tmp/bowtie2-2.2.9-linux-x86_64.zip
+    wget -nv https://github.com/BenLangmead/bowtie2/releases/download/v2.5.4/bowtie2-2.5.4-linux-x86_64.zip -O /tmp/bowtie2-2.5.4-linux-x86_64.zip
+    unzip /tmp/bowtie2-2.5.4-linux-x86_64.zip -d /opt/
+    mv /opt/bowtie2-* /opt/bowtie2
+    rm -f /tmp/bowtie2-2.5.4-linux-x86_64.zip
     
     # samtools
     wget -nv https://github.com/samtools/samtools/releases/download/1.10/samtools-1.10.tar.bz2 -O /tmp/samtools-1.10.tar.bz2
     tar xjf /tmp/samtools-1.10.tar.bz2 -C /tmp/
     ls -l /tmp/
     cd /tmp/samtools-1.10
-    ./configure --prefix=/opt/samtools-1.10 --without-curses
+    ./configure --prefix=/opt/samtools --without-curses
     make install
     cd /tmp
     rm -rf /tmp/samtools-1.10.tar.bz2 /tmp/samtools-1.10

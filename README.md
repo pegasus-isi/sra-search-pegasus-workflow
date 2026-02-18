@@ -21,11 +21,11 @@ the final output of the workflow.
 
 To submit a workflow, run:
 
-    ./sra-search.py --sra-id-list tests/10/sra_ids.txt --reference tests/10/crassphage.fna
+    ./sra-search.py --sra-id-list examples/10/sra_ids.txt --reference examples/10/crassphage.fna
 
 ## Testing
 
 Please test the workflow with the single SRA input:
 
-    ./sra-search.py --sra-id-list tests/1/sra_ids.txt --reference tests/1/crassphage.fna
+    ./sra-search.py --sra-id-list examples/1/sra_ids.txt --reference examples/1/crassphage.fna
 

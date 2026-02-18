@@ -15,15 +15,15 @@ cd container && apptainer build sra.sif sra.def
 
 ### Submit a workflow
 ```bash
-./sra-search.py --sra-id-list tests/10/sra_ids.txt --reference tests/10/crassphage.fna
+./sra-search.py --sra-id-list examples/10/sra_ids.txt --reference examples/10/crassphage.fna
 ```
 
 ### Test with a single SRA input
 ```bash
-./sra-search.py --sra-id-list tests/1/sra_ids.txt --reference tests/1/crassphage.fna
+./sra-search.py --sra-id-list examples/1/sra_ids.txt --reference examples/1/crassphage.fna
 ```
 
-Test datasets are in `tests/{1,10,1000}/` with SRA ID lists and a crassphage reference genome.
+Test datasets are in `examples/{1,10,1000}/` with SRA ID lists and a crassphage reference genome.
 
 ## Architecture
 
@@ -49,7 +49,7 @@ All tools run inside a Singularity/Apptainer container (`container/sra.sif`). Th
 
 ### Container (container/)
 
-Defined in `container/sra.def` (Apptainer/Singularity). Installs SRA Toolkit 2.10.0, Bowtie2 2.2.9, and Samtools 1.10 on Debian 13.
+Defined in `container/sra.def` (Apptainer/Singularity). Installs SRA Toolkit 2.10.0, Bowtie2 2.5.4, and Samtools 1.10 on Debian 13.
 
 ## Key Details
 

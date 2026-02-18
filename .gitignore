@@ -1,6 +1,8 @@
 .project
 .pydevproject
+__pycache__
 pegasus.properties
 wf-output
 wf-scratch
 workflow.yml
+container/sra.sif

@@ -98,7 +98,7 @@ def generate_and_submit_wf():
                        'bowtie2-build',
                        site='incontainer',
                        container=container,
-                       pfn='/opt/bowtie2-2.2.9/bowtie2-build',
+                       pfn='/opt/bowtie2/bowtie2-build',
                        is_stageable=False
                     )
     bowtie2_build.add_profiles(Namespace.CONDOR, key='request_memory', value='1 GB')
