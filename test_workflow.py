@@ -8,6 +8,7 @@ attaches a Pegasus Workflow object to that directory, then polls status until
 the workflow succeeds, fails, or times out.
 """
 
+import os
 import re
 import subprocess
 import time
@@ -45,7 +46,7 @@ class TestSraSearchWorkflow(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        """Submit the workflow once for all tests and attach a Workflow object."""
+        """Submit the workflow, wait for it to finish, and store the final state."""
         result = subprocess.run(
             ["./sra-search.py",
              "--sra-id-list", "examples/1/sra_ids.txt",
@@ -67,46 +68,56 @@ class TestSraSearchWorkflow(unittest.TestCase):
         cls.wf._submit_dir = cls.run_dir
         cls.wf._client = Client(PEGASUS_HOME)
 
-    def _get_state(self) -> str:
-        """Return the root DAG state string (e.g. 'Running', 'Success', 'Failure')."""
-        status = self.wf.status(json=True, noqueue=True)
-        return status.get("dags", {}).get("root", {}).get("state", "")
-
-    def test_workflow_succeeds(self):
-        """Workflow should reach 'Success' within TIMEOUT_MINUTES minutes."""
-        print(f"\nRun directory: {self.run_dir}")
-
+        print(f"\nRun directory: {cls.run_dir}")
         time.sleep(INITIAL_SLEEP_SECONDS)
 
-        state = self._get_state()
+        state = cls._poll_state()
         print(f"Initial state: {state!r}")
 
         deadline = time.time() + TIMEOUT_MINUTES * 60
 
         while state in RUNNING_STATES:
             if time.time() >= deadline:
-                self.wf.remove()
+                cls.wf.remove()
                 time.sleep(60)
-                self.fail(
+                raise RuntimeError(
                     f"Workflow did not finish within {TIMEOUT_MINUTES} minutes; "
-                    f"called pegasus-remove on {self.run_dir}"
+                    f"called pegasus-remove on {cls.run_dir}"
                 )
 
             time.sleep(POLL_INTERVAL_SECONDS)
-            state = self._get_state()
+            state = cls._poll_state()
             print(f"State: {state!r}")
 
+        cls.final_state = state
+        print(f"*** Workflow finished with state {state!r} ***")
+
+    @classmethod
+    def _poll_state(cls) -> str:
+        """Return the root DAG state string (e.g. 'Running', 'Success', 'Failure')."""
+        status = cls.wf.status(json=True, noqueue=True)
+        return status.get("dags", {}).get("root", {}).get("state", "")
+
+    def test_workflow_succeeds(self):
+        """Workflow should reach 'Success' within TIMEOUT_MINUTES minutes."""
         self.assertEqual(
-            state, "Success",
-            msg=f"Workflow ended with state {state!r} instead of 'Success'",
+            self.final_state, "Success",
+            msg=f"Workflow ended with state {self.final_state!r} instead of 'Success'",
         )
-        print("*** Workflow finished successfully ***")
 
     def test_workflow_has_jobs(self):
         """After submission the workflow status should report at least one job."""
         status = self.wf.status(json=True, noqueue=True)
         total = status.get("totals", {}).get("total", 0)
         self.assertGreater(total, 0, msg="Expected at least one job in the workflow")
+
+    def test_results_tar_gz_exists(self):
+        """wf-output/results.tar.gz should exist after the workflow completes."""
+        output_file = os.path.join("wf-output", "results.tar.gz")
+        self.assertTrue(
+            os.path.isfile(output_file),
+            msg=f"Expected output file not found: {output_file}",
+        )
 
 
 if __name__ == "__main__":
