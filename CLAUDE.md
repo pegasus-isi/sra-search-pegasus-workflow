@@ -18,7 +18,14 @@ cd container && apptainer build sra.sif sra.def
 ./sra-search.py --sra-id-list examples/10/sra_ids.txt --reference examples/10/crassphage.fna
 ```
 
-### Test with a single SRA input
+### Run the unit tests (ALWAYS run this to test changes)
+```bash
+python3 test_workflow.py -v
+```
+
+This submits a single-SRA workflow and waits for it to reach "Success". All tests must pass before any change is considered complete.
+
+### Test with a single SRA input (manual)
 ```bash
 ./sra-search.py --sra-id-list examples/1/sra_ids.txt --reference examples/1/crassphage.fna
 ```

@@ -65,7 +65,7 @@ def generate_and_submit_wf():
     parser.add_argument('--sra-id-list', dest='sra_id_list', default=None, required=True,
                         help='Specifies list of SRA IDs to include in the search')
     parser.add_argument('--reference', dest='reference', default=None, required=True,
-                        help='Specifies the fasta file to use as a reference for the searc')
+                        help='Specifies the fasta file to use as a reference for the search')
     args = parser.parse_args(sys.argv[1:])
     
     wf = Workflow('sra-search')
@@ -77,7 +77,7 @@ def generate_and_submit_wf():
     # set the concurrency limit for the download jobs, and send some extra usage
     # data to the Pegasus developers
     props = Properties()
-    props.add_site_profile("condorpool", "condor", "universe", "container");
+    props.add_site_profile("condorpool", "condor", "universe", "container")
 
     props['pegasus.data.configuration'] = 'condorio'
     props['dagman.fasterq-dump.maxjobs'] = '20'
@@ -108,7 +108,7 @@ def generate_and_submit_wf():
                   'bowtie2',
                   site='local',
                   container=container,
-                  pfn=BASE_DIR + '/executables/bowtie2_wrapper',
+                  pfn=f"{BASE_DIR}/executables/bowtie2_wrapper",
                   is_stageable=True
               )
     bowtie2.add_profiles(Namespace.CONDOR, key='request_memory', value='2 GB')
@@ -118,7 +118,7 @@ def generate_and_submit_wf():
                       'fasterq-dump',
                        site='local',
                        container=container,
-                       pfn=BASE_DIR + '/executables/fasterq_dump_wrapper',
+                       pfn=f"{BASE_DIR}/executables/fasterq_dump_wrapper",
                        is_stageable=True
                      )
     fasterq_dump.add_profiles(Namespace.CONDOR, key='request_memory', value='1 GB')
@@ -130,7 +130,7 @@ def generate_and_submit_wf():
                 'merge',
                 site='local',
                 container=container,
-                pfn=BASE_DIR + '/executables/merge',
+                pfn=f"{BASE_DIR}/executables/merge",
                 is_stageable=True
             )
     merge.add_condor_profile(request_memory='1 GB')
@@ -159,33 +159,33 @@ def generate_and_submit_wf():
     wf.add_jobs(index_job)
 
     # create jobs for each SRA ID
-    fh = open(args.sra_id_list)
-    for line in fh:
-        sra_id = line.strip()
-        if len(sra_id) < 5:
-            continue
+    with open(args.sra_id_list) as fh:
+        for line in fh:
+            sra_id = line.strip()
+            if len(sra_id) < 5:
+                continue
 
-        # files for this id
-        fastq_1 = File('{}_1.fastq'.format(sra_id))
-        fastq_2 = File('{}_2.fastq'.format(sra_id))
+            # files for this id
+            fastq_1 = File('{}_1.fastq'.format(sra_id))
+            fastq_2 = File('{}_2.fastq'.format(sra_id))
 
-        # download job
-        j = Job('fasterq-dump')
-        j.add_args('--split-files', sra_id)
-        j.add_outputs(fastq_1, fastq_2, stage_out=False)
-        wf.add_jobs(j)
+            # download job
+            j = Job('fasterq-dump')
+            j.add_args('--split-files', sra_id)
+            j.add_outputs(fastq_1, fastq_2, stage_out=False)
+            wf.add_jobs(j)
 
-        # bowtie2 job
-        bam = File('{}.bam'.format(sra_id))
-        bam_index = File('{}.bam.bai'.format(sra_id))
-        j = Job('bowtie2')
-        j.add_args(sra_id)
-        j.add_inputs(*ref_files, fastq_1, fastq_2)
-        j.add_outputs(bam, bam_index, stage_out=False)
-        wf.add_jobs(j)
-        
-        # keep track of jobs and outputs for merging
-        to_merge.append(j)
+            # bowtie2 job
+            bam = File('{}.bam'.format(sra_id))
+            bam_index = File('{}.bam.bai'.format(sra_id))
+            j = Job('bowtie2')
+            j.add_args(sra_id)
+            j.add_inputs(*ref_files, fastq_1, fastq_2)
+            j.add_outputs(bam, bam_index, stage_out=False)
+            wf.add_jobs(j)
+
+            # keep track of jobs and outputs for merging
+            to_merge.append(j)
     
     add_merge_jobs(wf, to_merge)
 
