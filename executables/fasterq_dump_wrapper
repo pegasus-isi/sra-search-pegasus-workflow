@@ -2,7 +2,7 @@
 
 set -e
 
-# a rewquirement for the current sratools release
+# a requirement for the current sratools release
 vdb-config --restore-defaults
 
 time fasterq-dump "$@"

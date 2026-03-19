@@ -29,3 +29,8 @@ Please test the workflow with the single SRA input:
 
     ./sra-search.py --sra-id-list examples/1/sra_ids.txt --reference examples/1/crassphage.fna
 
+## Workflow Details
+
+* All jobs run under HTCondor's `container` universe using a local Singularity/Apptainer `.sif` image (`container/sra.sif`).
+* The data staging mode is `condorio` which makes this a flexible workflow which should be easy to run in an HTCondor pool.
+

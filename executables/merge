@@ -10,8 +10,8 @@ shift
 
 # everything else is an input (could be mix of tar and bams)
 for FILE in "$@"; do
-    if (echo $FILE | grep tar.gz) >/dev/null 2>&1; then
-        tar xzf $FILE
+    if [[ "$FILE" == *.tar.gz ]]; then
+        tar xzf "$FILE"
     else
         mv $FILE results/
     fi
