@@ -6,3 +6,13 @@ wf-output
 wf-scratch
 workflow.yml
 container/sra.sif
+.venv/
+sites.yml
+scratch/
+output/
+replicas.yml
+transformations.yml
+submit/
+workflow.png
+.ipynb_checkpoints/
+__pycache__/
