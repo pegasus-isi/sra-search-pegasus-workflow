@@ -1,0 +1,9 @@
+# Read by Pegasus AI Studio and PegasusHub. `scripts.generator` names the
+# script Studio runs and reads its options from: sra_search.py, which defines
+# the argparse parser, rather than the ./sra-search.py wrapper, which only
+# imports main() and so exposes no options to read.
+pegasus:
+  version:
+    min: 5.0.4
+scripts:
+  generator: sra_search.py
